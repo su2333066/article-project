@@ -63,6 +63,50 @@ app.get("/", async (req, res) => {
   res.send("여기로 옵니다!");
 });
 
+app.get("/article", async (req, res) => {
+  const article = await 디비실행(`SELECT * FROM article`);
+  res.send(article);
+});
+
+app.post("/article", async (req, res) => {
+  const { title, body } = req.body;
+  const { loginUser } = req.session;
+
+  const result = {
+    code: "success",
+    message: "작성되었습니다",
+  };
+
+  if (title === "") {
+    result.code = "fail";
+    result.message = "제목을 작성해주세요";
+  }
+
+  if (body === "") {
+    result.code = "fail";
+    result.message = "내용을 작성해주세요";
+  }
+
+  if (result.code === "fail") {
+    res.send(result);
+    return;
+  }
+
+  /**
+   * 이제 본격적으로 DB에 넣어야함
+   *
+   * title
+   * body
+   * user_seq
+   *
+   */
+  const query = `INSERT INTO article(title,body,user_seq) VALUES('${title}','${body}','${loginUser.seq}')`;
+  console.log(query);
+
+  await 디비실행(query);
+  res.send(result);
+});
+
 /**
  * 벨로퍼트 자바스크립트 (필수) ==============================================
  */
@@ -81,7 +125,7 @@ app.post("/join", async (req, res) => {
    */
   const 회원 = await 디비실행(`SELECT * FROM user WHERE id = '${id}' `);
 
-  if (회원.length > 0) {
+  if (회원.length === 0) {
     result.code = "error";
     result.message = "이미 같은 아이디로 회원가입 되어있습니다";
     res.send(result);
